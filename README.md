@@ -1,39 +1,47 @@
 # Evaluate
-<html>
-    <head>
-      <link rel='stylesheet' type='text/css' media='screen' href='https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css'>
-      <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
-      <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
-    </head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyScript Evaluator</title>
+    <link rel="stylesheet" type="text/css" media="screen" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+</head>
 
-  <body><center><br>
+<body>
+    <center><br>
+        <textarea id="input_text" placeholder="Enter Your Expression"></textarea><br><br>
+        <button id="solve" type="button" class="button is-primary">Evaluate</button>
+        <button id="clear" type="button" class="button is-danger">Clear</button><br><br>
+        <p id='output'></p>
+    </center>
 
-<textarea name="input_text" id="input_text" placeholder="Enter Your Text"></textarea><br><br>
+    <script type="py" id="pyscript">
+        from js import document
+        from pyodide.ffi import create_proxy  # ✅ Fix Pyodide event issue
 
-<button id="solve" type="button" class="button is-primary" pys-onClick="evaluate">Evaluate</button>
+        def clear(event):
+            document.getElementById("input_text").value = ""
+            document.getElementById("output").innerText = ""
 
-<button id="clear" type="button" class="button is-danger" pys-onClick="clear">Clear</button><br><br>
-    
-<p id='output'></p>
+        def evaluate(event):
+            input_text = document.getElementById("input_text").value
+            output = document.getElementById("output")
 
-<py-script>
-  input_text=Element("input_text")
+            try:
+                result = eval(input_text)  # ⚠️ Be careful using eval (Security risk)
+                output.innerText = f"Result: {result}"
+            except Exception as e:
+                output.innerText = f"Error: {e}"
 
-  output=Element("output")
+        # ✅ Fix Pyodide event issues
+        evaluate_proxy = create_proxy(evaluate)
+        clear_proxy = create_proxy(clear)
 
-  def clear(*args,**kwargs):
-    input_text.clear()
-    output.clear()
-  
-  def evaluate(*args,**kwargs):
-
-    s=input_text.value
-    try:
-      e=eval(s)
-      output.write(e)
-    except:
-      output.write("Error")
-
-</py-script>
-</center></body>
+        document.getElementById("solve").addEventListener("click", evaluate_proxy)
+        document.getElementById("clear").addEventListener("click", clear_proxy)
+    </script>
+</body>
 </html>
